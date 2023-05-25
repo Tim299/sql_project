@@ -25,10 +25,11 @@ def select_database(session):
             raise
 
 def insert_into_Orders(session):
+    test = 3
+    test2 = 600
     insert_sql = [
-        "INSERT INTO Orders (orderID, item_id) VALUES (3, 800);",
-        "INSERT INTO Orders (orderID, item_id) VALUES (2, 801);",
-        "INSERT INTO Orders (orderID, item_id) VALUES (6, 802);"
+        "INSERT INTO Orders (orderID, item_id) VALUES (" + str(test) + "," +  str(test2) + ");",
+    
     ]
 
     for query in insert_sql:
