@@ -13,6 +13,9 @@ session = mysqlx.get_session({
     "user": "root",
     "password": "12345678"
 })
+window = tk.Tk()
+text_widget = tk.Text(window, width=40, height=30)
+text_widget.grid(row=0, column=3,rowspan=2)
 
 DB_NAME = 'pos_system'
 
@@ -31,13 +34,13 @@ def insert_into_Orders(session):
     test = 3
     test2 = 600
     insert_sql = [
-        "INSERT INTO Orders (orderID, item_id) VALUES (" + str(test) + "," +  str(test2) + ");",
-    
+        "INSERT INTO Orders (orderID, item_id) VALUES (" + str(test) + "," +  str(test2) + ");"
     ]
 
     for query in insert_sql:
         try:
             print("SQL query {}: ".format(query), end='')
+            text_widget.insert(tk.END, "1x Pizza 150;-")
             session.sql(query).execute()
         except DatabaseError as err:
             print(err.msg)
@@ -52,6 +55,7 @@ def retrieve_from_database(session):
         # Iterate over the rows and display the data
         for row in result.fetch_all():
             print(row)
+            text_widget.insert(tk.END, f"{row}\n")
       
     except DatabaseError as err:
         print(f"Error: {err}")
@@ -76,7 +80,9 @@ def main():
     select_database(session)
 
     # Create the main window
-    window = tk.Tk()
+    
+
+    
 
     # Create buttons
     button1 = tk.Button(window, text="Show items", font=("Arial", 16), width=30, height=10, command=button1_click)
@@ -87,11 +93,11 @@ def main():
     button2.configure(background="green", fg="white")
     button2.grid(row=1, column=0, padx=10, pady=10)
 
-    button3 = tk.Button(window, text="Button 3", font=("Arial", 16), width=30, height=10, command=button3_click)
+    button3 = tk.Button(window, text="Pizza", font=("Arial", 16), width=30, height=10, command=button3_click)
     button3.configure(background="blue", fg="white")
     button3.grid(row=0, column=1, padx=10, pady=10)
 
-    button4 = tk.Button(window, text="Button 4", font=("Arial", 16), width=30, height=10, command=button4_click)
+    button4 = tk.Button(window, text="Cola", font=("Arial", 16), width=30, height=10, command=button4_click)
     button4.configure(background="yellow", fg="white")
     button4.grid(row=1, column=1, padx=10, pady=10)
 
