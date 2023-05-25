@@ -92,11 +92,11 @@ def main():
     button3.grid(row=0, column=1, padx=10, pady=10)
 
     button4 = tk.Button(window, text="Button 4", font=("Arial", 16), width=30, height=10, command=button4_click)
-    button4.configure(background="yellow", fg="black")
+    button4.configure(background="yellow", fg="white")
     button4.grid(row=1, column=1, padx=10, pady=10)
 
     button5 = tk.Button(window, text="Card", font=("Arial", 16), width=30, height=10, command=button4_click)
-    button5.configure(background="yellow", fg="black")
+    button5.configure(background="yellow", fg="white")
     button5.grid(row=2, column=0, padx=10, pady=10)
 
     # Start the GUI event loop
