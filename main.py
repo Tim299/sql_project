@@ -128,7 +128,19 @@ def open_popup():
     
 
 def button1_click():
-    retrieve_from_database(session)
+    try:
+        query = "SELECT name, itemType,stock FROM Item;"
+        result = session.sql(query).execute()
+
+        # Iterate over the rows and display the data
+        text_widget.insert(tk.END, "------------ CURRENT STOCK -----------\n\n")
+        for row in result.fetch_all():
+            print(row)
+            text_widget.insert(tk.END, f"{row}\n")
+        text_widget.insert(tk.END, "---------------------------------------\n\n")
+      
+    except DatabaseError as err:
+        print(f"Error: {err}")
 
 def button2_click():
     pass
@@ -140,13 +152,14 @@ def button3_click():
     # quanity should be removed
     # subtotal should be constant 99
     insert_sql = [
-        "INSERT INTO OrderItem (orderID, itemID,quantity,subtotal) VALUES ("+str(OrderID)+",1,1,0);"
+        "INSERT INTO OrderItem (orderID, itemID,quantity,subtotal) VALUES ("+str(OrderID)+",1,1,0);",
+        "Update Item Set stock = stock - 1 WHERE itemID = 1;" 
     ]
-
+    text_widget.insert(tk.END, "1x Pizza 99;-\n")
     for query in insert_sql:
         try:
             print("SQL query {}: ".format(query), end='')
-            text_widget.insert(tk.END, "1x Pizza 99;-\n")
+            
             session.sql(query).execute()
         except DatabaseError as err:
             print(err.msg)
@@ -158,18 +171,21 @@ def button3_click():
 def button4_click():
     # Perform some other functionality
     insert_sql = [
-        "INSERT INTO OrderItem (orderID, itemID,quantity,subtotal) VALUES ("+str(OrderID)+",2,1,0);"
-    ]
+        "INSERT INTO OrderItem (orderID, itemID,quantity,subtotal) VALUES ("+str(OrderID)+",2,1,0);",
+        "Update Item Set stock = stock - 1 WHERE itemID = 2;" 
 
+    ]
+    text_widget.insert(tk.END, "1x Cola 19;-\n")
     for query in insert_sql:
         try:
             print("SQL query {}: ".format(query), end='')
-            text_widget.insert(tk.END, "1x Cola 19;-\n")
+            
             session.sql(query).execute()
         except DatabaseError as err:
             print(err.msg)
         else:
             print("OK")
+    
     
     update_total_sum(19.00)
 
@@ -187,7 +203,7 @@ def main():
     
 
     # Create buttons
-    button1 = Button(window, text="Show items", font=("Verdana", 40), width=300, height=200, command=button1_click)
+    button1 = Button(window, text="Show stock", font=("Verdana", 40), width=300, height=200, command=button1_click)
     button1.configure(background="red", fg="white")
     button1.grid(row=0, column=0, padx=10, pady=10)
 
