@@ -2,7 +2,7 @@ import mysqlx
 from mysqlx.errors import DatabaseError
 import tkinter as tk
 
-
+OrderID = 1
 ## IDE ##
 ## Varje knapp lägger till en viss item i en vanlig lista.Om 
 
@@ -22,6 +22,7 @@ DB_NAME = 'pos_system'
 def select_database(session):
     try:
         session.sql("USE {}".format(DB_NAME)).execute()
+        
     except DatabaseError as de:
         if de.errno == 1049:
             print("Error: Database '{}' does not exist.".format(DB_NAME))
@@ -30,11 +31,27 @@ def select_database(session):
             print("Error executing SQL command: {}".format(de))
             raise
 
-def insert_into_Orders(session):
-    test = 3
-    test2 = 600
+
+    ## RESET ORDERITEM
     insert_sql = [
-        "INSERT INTO Orders (orderID, item_id) VALUES (" + str(test) + "," +  str(test2) + ");"
+        "TRUNCATE TABLE OrderItem"
+    ]
+
+    for query in insert_sql:
+        try:
+            print("SQL query {}: ".format(query), end='')
+            text_widget.insert(tk.END, "1x Pizza 150;-")
+            session.sql(query).execute()
+        except DatabaseError as err:
+            print(err.msg)
+        else:
+            print("OK")
+
+
+def insert_into_table(session,table,OrderID):
+    
+    insert_sql = [
+        "INSERT INTO "+table+" (orderID, item_id) VALUES ("+OrderID+",itemID""," +  str(test2) + ");"
     ]
 
     for query in insert_sql:
@@ -64,10 +81,27 @@ def button1_click():
     retrieve_from_database(session)
 
 def button2_click():
-    insert_into_Orders(session)
+    pass
 
 def button3_click():
-    retrieve_from_database(session)
+    #Insert Pizza into OrderItem
+    # OrderId should be a global variable
+    # itemID should be constant 1
+    # quanity should be removed
+    # subtotal should be constant 99
+    insert_sql = [
+        "INSERT INTO OrderItem (orderID, itemID,quantity,subtotal) VALUES ("+OrderID+",1,1,20);"
+    ]
+
+    for query in insert_sql:
+        try:
+            print("SQL query {}: ".format(query), end='')
+            text_widget.insert(tk.END, "1x Pizza 150;-")
+            session.sql(query).execute()
+        except DatabaseError as err:
+            print(err.msg)
+        else:
+            print("OK")
 
 def button4_click():
     # Perform some other functionality

@@ -1,15 +1,34 @@
-create database pos_system;
-use pos_system;
+CREATE DATABASE pos_system;
+USE pos_system;
+
 CREATE TABLE Orders
 (
-    orderID  INT         NOT NULL,
-    item_id   INT ,
+    orderID INT NOT NULL,
+    orderDate DATE,
+    totalPrice INT,
     PRIMARY KEY (orderID)
-
 );
-Drop table Orders;
-INSERT INTO Orders( orderID, item_id)
-VALUES
-(1,  800);
 
-SELECT * from Orders;
+CREATE TABLE Item
+(
+    itemID INT NOT NULL, 
+    name VARCHAR(128),
+    price DOUBLE, 
+    stock INT, 
+    itemType VARCHAR(32),
+    PRIMARY KEY (itemID)
+);
+
+CREATE TABLE OrderItem
+(
+    orderID INT NOT NULL, 
+    itemID INT NOT NULL, 
+    quantity INT, 
+    subtotal DOUBLE, 
+    FOREIGN KEY (orderID) REFERENCES Orders(orderID),
+    FOREIGN KEY (itemID) REFERENCES Item(itemID)
+);
+
+SELECT * FROM Orders;
+SELECT * FROM Item;
+SELECT * FROM OrderItem;
