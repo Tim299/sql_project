@@ -3,6 +3,9 @@ from mysqlx.errors import DatabaseError
 import tkinter as tk
 
 
+## IDE ##
+## Varje knapp lägger till en viss item i en vanlig lista.Om 
+
 # Connect to server on localhost
 session = mysqlx.get_session({
     "host": "localhost",
@@ -76,20 +79,25 @@ def main():
     window = tk.Tk()
 
     # Create buttons
-    button1 = tk.Button(window, text="Show items", background="red",activebackground="red", fg="white", font=("Arial", 16), width=30, height=10, command=button1_click)
-    button1.pack()
+    button1 = tk.Button(window, text="Show items", font=("Arial", 16), width=30, height=10, command=button1_click)
+    button1.configure(background="red", fg="white")
+    button1.grid(row=0, column=0, padx=10, pady=10)
 
-    button2 = tk.Button(window, text="Add items", bg="green", fg="white", font=("Arial", 16), width=30, height=10, command=button2_click)
-    button2.pack()
+    button2 = tk.Button(window, text="Add items", font=("Arial", 16), width=30, height=10, command=button2_click)
+    button2.configure(background="green", fg="white")
+    button2.grid(row=1, column=0, padx=10, pady=10)
 
-    button3 = tk.Button(window, text="Button 3", bg="blue", fg="white", font=("Arial", 16), width=30, height=10, command=button3_click)
-    button3.pack()
+    button3 = tk.Button(window, text="Button 3", font=("Arial", 16), width=30, height=10, command=button3_click)
+    button3.configure(background="blue", fg="white")
+    button3.grid(row=0, column=1, padx=10, pady=10)
 
-    button4 = tk.Button(window, text="Button 4", background="yellow", fg="black", font=("Arial", 16), width=20, height=10, command=button4_click)
-    button4.pack()
+    button4 = tk.Button(window, text="Button 4", font=("Arial", 16), width=30, height=10, command=button4_click)
+    button4.configure(background="yellow", fg="black")
+    button4.grid(row=1, column=1, padx=10, pady=10)
 
-    button5 = tk.Button(window, text="Button 5", bg="purple", fg="white", font=("Arial", 16), width=20, height=10, command=button5_click)
-    button5.pack()
+    button5 = tk.Button(window, text="Card", font=("Arial", 16), width=30, height=10, command=button4_click)
+    button5.configure(background="yellow", fg="black")
+    button5.grid(row=2, column=0, padx=10, pady=10)
 
     # Start the GUI event loop
     window.mainloop()
