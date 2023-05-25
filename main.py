@@ -2,6 +2,7 @@ import mysqlx
 from mysqlx.errors import DatabaseError
 import tkinter as tk
 from tkmacosx import Button
+import tkinter.messagebox as messagebox
 
 OrderID = 1
 
@@ -42,19 +43,7 @@ def select_database(session):
 
 
     ## RESET ORDERITEM
-    insert_sql = [
-        "TRUNCATE TABLE OrderItem"
-    ]
-
-    for query in insert_sql:
-        try:
-            print("SQL query {}: ".format(query), end='')
-            text_widget.insert(tk.END, "------------ SELECTED ITEMS -----------\n\n")
-            session.sql(query).execute()
-        except DatabaseError as err:
-            print(err.msg)
-        else:
-            print("OK")
+    reset_table()
 
 
 def insert_into_table(session,table,OrderID):
@@ -93,6 +82,50 @@ def update_total_sum(amount):
     new_total = current_total + amount
     total_label["text"] = "Total: ${:.2f}".format(new_total)
 
+def reset_table():
+    insert_sql = [
+        "TRUNCATE TABLE OrderItem"
+    ]
+
+    for query in insert_sql:
+        try:
+            print("SQL query {}: ".format(query), end='')
+            text_widget.insert(tk.END, "------------ SELECTED ITEMS -----------\n\n")
+            session.sql(query).execute()
+        except DatabaseError as err:
+            print(err.msg)
+        else:
+            print("OK")
+
+
+
+def open_popup():
+    popup = tk.Toplevel(window)
+    popup.title("Receipt")
+    popup.geometry("300x200")
+
+    # Add the content and widgets to the pop-up window
+    label = tk.Label(popup, text="Here is your receipt.")
+    label.pack()
+
+    # Function to execute when the popup is closed
+    def on_popup_close():
+        print("Popup closed")
+        global OrderID
+        OrderID += 1
+        print(OrderID)
+        reset_table()
+        total_label["text"] = "Total: $0.00"
+        text_widget.delete("1.0", tk.END)
+        popup.destroy()
+        
+
+    # Bind the function to the pop-up window's close event
+    popup.protocol("WM_DELETE_WINDOW", on_popup_close)
+
+    # Focus the pop-up window (optional)
+    popup.focus_set()
+    
 
 def button1_click():
     retrieve_from_database(session)
@@ -141,8 +174,10 @@ def button4_click():
     update_total_sum(19.00)
 
 def button5_click():
+    open_popup()
+
     # Perform some other functionality
-    pass
+    
 def main():
     select_database(session)
 
@@ -168,7 +203,7 @@ def main():
     button4.configure(background="#0a4275", fg="white")
     button4.grid(row=1, column=1, padx=10, pady=10)
 
-    button5 = Button(window, text="Card", font=("Verdana", 40),borderless=1, width=300, height=200, command=button4_click)
+    button5 = Button(window, text="Card", font=("Verdana", 40),borderless=1, width=300, height=200, command=button5_click)
     button5.configure(background="#d3d3d3", fg="white")
     button5.grid(row=2, column=0, padx=10, pady=10)
 
