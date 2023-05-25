@@ -1,0 +1,13 @@
+CREATE TABLE Orders
+(
+    orderID  INT         NOT NULL,
+    item_id   INT ,
+    PRIMARY KEY (orderID)
+
+);
+Drop table Orders;
+INSERT INTO Orders( orderID, item_id)
+VALUES
+(1,  800);
+
+SELECT * from Orders;
