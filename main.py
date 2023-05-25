@@ -99,14 +99,47 @@ def reset_table():
 
 
 
-def open_popup():
+def open_popup(rows):
     popup = tk.Toplevel(window)
     popup.title("Receipt")
-    popup.geometry("300x200")
 
-    # Add the content and widgets to the pop-up window
+    # Create a frame to hold the scrollable text widget
+    frame = tk.Frame(popup)
+    frame.pack(fill=tk.BOTH, expand=True)
+
+    # Create a scrollable text widget
+    text_widget_popup = tk.Text(frame, width=40, height=10)
+    text_widget_popup.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+
+    # Create a scrollbar for the text widget
+    scrollbar = tk.Scrollbar(frame, command=text_widget_popup.yview)
+    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+    text_widget_popup.config(yscrollcommand=scrollbar.set)
+
     label = tk.Label(popup, text="Here is your receipt.")
     label.pack()
+    total_price = 0  # Variable to store the total price
+
+    for row in rows:
+        order_id = row[0]          # Access the orderID
+        order_date = row[1]        # Access the orderDate
+        total_quantity = row[2]    # Access the totalQuantity
+        item_id = row[3]           # Access the itemID
+        #item_name = row[5]         # Access the name
+        item_price = row[4]        # Access the price
+        subtotal = row[6]  # Access the subtotal
+
+        text_widget_popup.insert(tk.END, f"Order ID: {order_id}\n")
+        text_widget_popup.insert(tk.END, f"Order Date: {order_date}\n")
+        text_widget_popup.insert(tk.END, f"Total Quantity: {total_quantity}\n")
+        text_widget_popup.insert(tk.END, f"Item: {item_id}\n")
+       
+        text_widget_popup.insert(tk.END, f"Item Price: {item_price}\n")
+        text_widget_popup.insert(tk.END, f"Subtotal: {subtotal}\n\n")
+        total_price += subtotal  # Add the subtotal to the total price
+
+    # Display the total price
+        text_widget_popup.insert(tk.END, f"Total Price: {total_price}\n")
 
     # Function to execute when the popup is closed
     def on_popup_close():
@@ -116,16 +149,25 @@ def open_popup():
         print(OrderID)
         reset_table()
         total_label["text"] = "Total: $0.00"
-        text_widget.delete("1.0", tk.END)
+        text_widget_popup.delete("1.0", tk.END)
         popup.destroy()
-        
 
     # Bind the function to the pop-up window's close event
     popup.protocol("WM_DELETE_WINDOW", on_popup_close)
 
+    # Calculate the desired width and height of the popup window based on text content
+    text_width = text_widget_popup.winfo_reqwidth()
+    text_height = text_widget_popup.winfo_reqheight()
+    padding = 20  # Padding around the text
+
+    popup_width = text_width + padding
+    popup_height = text_height + padding
+
+    # Set the size of the popup window
+    popup.geometry(f"{popup_width}x{popup_height}")
+
     # Focus the pop-up window (optional)
     popup.focus_set()
-    
 
 def button1_click():
     try:
@@ -190,7 +232,28 @@ def button4_click():
     update_total_sum(19.00)
 
 def button5_click():
-    open_popup()
+    #update total price in orders
+    #take sum of all prices in OrderItem
+    #print all items, prices, sum of prices, date and orderid
+   
+    try:
+        query = "SELECT o.orderID, o.orderDate, oi.itemID, i.name, i.price, oi.quantity, oi.subtotal " \
+                "FROM Orders o " \
+                "JOIN OrderItem oi ON o.orderID = oi.orderID " \
+                "JOIN Item i ON oi.itemID = i.itemID " \
+                "WHERE o.orderID = (SELECT MAX(orderID) FROM Orders);"
+        result = session.sql(query).execute()
+
+        # Retrieve all rows of data
+        rows = result.fetch_all()
+
+        # Open the popup and pass the retrieved data as a parameter
+        open_popup(rows)
+      
+    except DatabaseError as err:
+        print(f"Error: {err}")
+
+  
 
     # Perform some other functionality
     
