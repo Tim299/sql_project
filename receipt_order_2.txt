@@ -1,0 +1,8 @@
+Order ID: 1
+Order Date: 2023-05-25 00:00:00
+Total Quantity: 2
+Item: Coca Cola
+Item Price: 19.0
+Subtotal: 0.0
+
+Total Price: 0.0

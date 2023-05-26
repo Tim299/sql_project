@@ -97,50 +97,42 @@ def reset_table():
         else:
             print("OK")
 
+def write_receipt_to_file(rows):
+    receipt_info = ""  # Variable to store the receipt information
 
+    for row in rows:
+        order_id = row[0]
+        order_date = row[1]
+        total_quantity = row[5]
+        item_id = row[3]
+        item_price = row[4]
+        subtotal = row[6]
+
+        receipt_info += f"Order ID: {order_id}\n"
+        receipt_info += f"Order Date: {order_date}\n"
+        receipt_info += f"Total Quantity: {total_quantity}\n"
+        receipt_info += f"Item: {item_id}\n"
+        receipt_info += f"Item Price: {item_price}\n"
+        receipt_info += f"Subtotal: {subtotal}\n\n"
+
+    total_price = sum(row[6] for row in rows)
+    receipt_info += f"Total Price: {total_price}\n"
+
+    global OrderID
+    temp = OrderID -1
+    filename = f"receipt_order_{temp}.txt"  # Include OrderID in the file name
+
+    # Write receipt information to a text file
+    with open(filename, "w") as file:
+        file.write(receipt_info)
 
 def open_popup(rows):
     popup = tk.Toplevel(window)
-    popup.title("Receipt")
+    popup.title("Payment")
 
-    # Create a frame to hold the scrollable text widget
-    frame = tk.Frame(popup)
-    frame.pack(fill=tk.BOTH, expand=True)
-
-    # Create a scrollable text widget
-    text_widget_popup = tk.Text(frame, width=40, height=10)
-    text_widget_popup.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-
-    # Create a scrollbar for the text widget
-    scrollbar = tk.Scrollbar(frame, command=text_widget_popup.yview)
-    scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
-    text_widget_popup.config(yscrollcommand=scrollbar.set)
-
-    label = tk.Label(popup, text="Here is your receipt.")
-    label.pack()
-    total_price = 0  # Variable to store the total price
-
-    for row in rows:
-        order_id = row[0]          # Access the orderID
-        order_date = row[1]        # Access the orderDate
-        total_quantity = row[2]    # Access the totalQuantity
-        item_id = row[3]           # Access the itemID
-        #item_name = row[5]         # Access the name
-        item_price = row[4]        # Access the price
-        subtotal = row[6]  # Access the subtotal
-
-        text_widget_popup.insert(tk.END, f"Order ID: {order_id}\n")
-        text_widget_popup.insert(tk.END, f"Order Date: {order_date}\n")
-        text_widget_popup.insert(tk.END, f"Total Quantity: {total_quantity}\n")
-        text_widget_popup.insert(tk.END, f"Item: {item_id}\n")
-       
-        text_widget_popup.insert(tk.END, f"Item Price: {item_price}\n")
-        text_widget_popup.insert(tk.END, f"Subtotal: {subtotal}\n\n")
-        total_price += subtotal  # Add the subtotal to the total price
-
-    # Display the total price
-        text_widget_popup.insert(tk.END, f"Total Price: {total_price}\n")
-
+    label = tk.Label(popup, text="Please complete the purchase in the terminal and close this window when finished", font=("Verdana", 14))
+    label.pack(pady=20)
+   
     # Function to execute when the popup is closed
     def on_popup_close():
         print("Popup closed")
@@ -149,25 +141,31 @@ def open_popup(rows):
         print(OrderID)
         reset_table()
         total_label["text"] = "Total: $0.00"
-        text_widget_popup.delete("1.0", tk.END)
+        write_receipt_to_file(rows)  # Write the receipt information to a text file
+        messagebox.showinfo("Purchase Complete", "Purchase completed successfully")  # Display a message box
         popup.destroy()
 
     # Bind the function to the pop-up window's close event
     popup.protocol("WM_DELETE_WINDOW", on_popup_close)
 
-    # Calculate the desired width and height of the popup window based on text content
-    text_width = text_widget_popup.winfo_reqwidth()
-    text_height = text_widget_popup.winfo_reqheight()
-    padding = 20  # Padding around the text
+    # Add a button for indicating payment completion
+    payment_button = tk.Button(popup, text="Payment Complete", width=15, command=on_popup_close)
+    payment_button.pack(pady=10)
 
-    popup_width = text_width + padding
-    popup_height = text_height + padding
+    # Calculate the desired width and height of the popup window based on label content
+    label_width = 800
+    label_height = 400
+    padding = 20  # Padding around the label
+
+    popup_width = label_width + padding
+    popup_height = label_height + padding + payment_button.winfo_reqheight() + 10  # Additional height for the button
 
     # Set the size of the popup window
     popup.geometry(f"{popup_width}x{popup_height}")
 
     # Focus the pop-up window (optional)
     popup.focus_set()
+
 
 def button1_click():
     try:
@@ -255,8 +253,33 @@ def button5_click():
 
   
 
-    # Perform some other functionality
-    
+def button6_click():
+    try:
+        query = "SELECT SUM(totalPrice) FROM Orders WHERE orderDate = CURDATE();"
+        result = session.sql(query).execute()
+        total_sales = result.fetch_one()[0] or 0
+
+        messagebox.showinfo("Total Sales Today", "Total Sales Today: ${:.2f}".format(total_sales))
+    except DatabaseError as err:
+        print(f"Error: {err}")
+
+
+def button7_click():
+    try:
+        # SQL query to join Orders and Items tables and count the number of times each item appears in Orders
+        query = "SELECT i.itemID, i.name, COUNT(*) AS sold_count FROM Orders o JOIN OrderItem oi ON o.orderID = oi.orderID JOIN Item i ON oi.itemID = i.itemID GROUP BY oi.itemID, i.itemID, i.name;"
+        result = session.sql(query).execute()
+
+        # Retrieve the item sales data
+        item_sales = result.fetch_all()
+
+        # Display the item sales
+        messagebox.showinfo("Item Sales", "Item Sales:\n\n{}".format('\n'.join([f"Item ID: {row[0]}, Item Name: {row[1]}, Sold Count: {row[2]}" for row in item_sales])))
+      
+    except DatabaseError as err:
+        print(f"Error: {err}")
+
+
 def main():
     select_database(session)
 
@@ -286,6 +309,13 @@ def main():
     button5.configure(background="#d3d3d3", fg="white")
     button5.grid(row=2, column=0, padx=10, pady=10)
 
+    button6 = Button(window, text="View Total Sales Today", font=("Verdana", 20), width=300, height=100, command=button6_click)
+    button6.configure(background="black", fg="white")
+    button6.grid(row=3, column=0, padx=10, pady=10)
+
+    button7 = Button(window, text="View Item Sales", font=("Verdana", 20), width=300, height=100, command=button7_click)
+    button7.configure(background="black", fg="white")
+    button7.grid(row=3, column=1, padx=10, pady=10)
     # Start the GUI event loop
     window.mainloop()
 
