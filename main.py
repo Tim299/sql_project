@@ -14,7 +14,7 @@ session = mysqlx.get_session({
     "host": "localhost",
     "port": 33060,
     "user": "root",
-    "password": "12345678"
+    "password": "password"
 })
 window = tk.Tk()
 text_widget = tk.Text(window, width=40, height=30)
@@ -26,8 +26,15 @@ total_label = tk.Label(window, text="Total: $0.00")
 total_label.grid(row=2, column=3)
 total_label.configure(borderwidth=2, relief="solid", highlightthickness=2, highlightbackground="black")
 
-
 DB_NAME = 'pos_system'
+
+def only_numerics(string):
+    tmpstr = ""
+    for char in string:
+        if char == '0' or char == '1' or char == '2' or char == '3' or char == '4' or char == '5' or char == '6' or char == '7' or char == '8' or char == '9':
+            tmpstr = tmpstr + char
+    ret = int(tmpstr)
+    return ret
 
 def select_database(session):
     try:
@@ -47,7 +54,6 @@ def select_database(session):
 
 
 def insert_into_table(session,table,OrderID):
-    
     insert_sql = [
         "INSERT INTO "+table+" (orderID, item_id) VALUES ("+OrderID+",itemID""," +  str(test2) + ");"
     ]
@@ -183,51 +189,67 @@ def button1_click():
         print(f"Error: {err}")
 
 def button2_click():
-    pass
+    try:
+        query = "UPDATE Item SET stock = stock + 10;"
+        session.sql(query).execute()
+        text_widget.insert(tk.END, "Restocked all items\n")
+    except DatabaseError as err:
+        print(f"Error: {err}")
+
 
 def button3_click():
     #Insert Pizza into OrderItem
     # OrderId should be a global variable
     # itemID should be constant 1 s
     # quanity should be removed
-    # subtotal should be constant 99
-    insert_sql = [
-        "INSERT INTO OrderItem (orderID, itemID,quantity,subtotal) VALUES ("+str(OrderID)+",1,1,0);",
-        "Update Item Set stock = stock - 1 WHERE itemID = 1;" 
-    ]
-    text_widget.insert(tk.END, "1x Pizza 99;-\n")
-    for query in insert_sql:
-        try:
-            print("SQL query {}: ".format(query), end='')
-            
-            session.sql(query).execute()
-        except DatabaseError as err:
-            print(err.msg)
-        else:
-            print("OK")
-    update_total_sum(99.00)
+    # subtotal should be constant 99'
+    stockcheck = "SELECT stock FROM Item WHERE itemID = 1;"
+    stockresult = session.sql(stockcheck).execute()
+    rows = stockresult.fetch_all()
+    if only_numerics(str(rows[0])) > 0:
+        insert_sql = [
+            "INSERT INTO OrderItem (orderID, itemID,quantity,subtotal) VALUES ("+str(OrderID)+",1,1,0);",
+            "Update Item Set stock = stock - 1 WHERE itemID = 1;" 
+        ]
+        text_widget.insert(tk.END, "1x Pizza 99;-\n")
+        for query in insert_sql:
+            try:
+                print("SQL query {}: ".format(query), end='')
+                session.sql(query).execute()
+            except DatabaseError as err:
+                print(err.msg)
+            else:
+                print("OK")
+        update_total_sum(99.00)
+    else:
+        print("OUT OF STOCK")
+        text_widget.insert(tk.END, "OUT OF STOCK\n")
 
 
 def button4_click():
     # Perform some other functionality
-    insert_sql = [
-        "INSERT INTO OrderItem (orderID, itemID,quantity,subtotal) VALUES ("+str(OrderID)+",2,1,0);",
-        "Update Item Set stock = stock - 1 WHERE itemID = 2;" 
+    stockcheck = "SELECT stock FROM Item WHERE itemID = 2;"
+    stockresult = session.sql(stockcheck).execute()
+    rows = stockresult.fetch_all()
+    if only_numerics(str(rows[0])) > 0:
+        insert_sql = [
+            "INSERT INTO OrderItem (orderID, itemID,quantity,subtotal) VALUES ("+str(OrderID)+",2,1,0);",
+            "Update Item Set stock = stock - 1 WHERE itemID = 2;" 
+        ]
+        text_widget.insert(tk.END, "1x Cola 19;-\n")
+        for query in insert_sql:
+            try:
+                print("SQL query {}: ".format(query), end='')
 
-    ]
-    text_widget.insert(tk.END, "1x Cola 19;-\n")
-    for query in insert_sql:
-        try:
-            print("SQL query {}: ".format(query), end='')
-            
-            session.sql(query).execute()
-        except DatabaseError as err:
-            print(err.msg)
-        else:
-            print("OK")
-    
-    
-    update_total_sum(19.00)
+                session.sql(query).execute()
+            except DatabaseError as err:
+                print(err.msg)
+            else:
+                print("OK")
+        update_total_sum(19.00)
+    else:
+        print("OUT OF STOCK")
+        text_widget.insert(tk.END, "OUT OF STOCK\n")
 
 def button5_click():
     #update total price in orders
@@ -293,7 +315,7 @@ def main():
     button1.configure(background="red", fg="white")
     button1.grid(row=0, column=0, padx=10, pady=10)
 
-    button2 = Button(window, text="Add items", font=("Verdana", 40), width=300, height=200, command=button2_click)
+    button2 = Button(window, text="Restock items", font=("Verdana", 40), width=300, height=200, command=button2_click)
     button2.configure(background="green", fg="white")
     button2.grid(row=1, column=0, padx=10, pady=10)
 
