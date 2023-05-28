@@ -4,7 +4,7 @@ import tkinter as tk
 from tkmacosx import Button
 import tkinter.messagebox as messagebox
 
-OrderID = 1
+OrderID = 2
 
 ## IDE ##
 ## Varje knapp lägger till en viss item i en vanlig lista.Om 
@@ -28,6 +28,19 @@ total_label.configure(borderwidth=2, relief="solid", highlightthickness=2, highl
 
 DB_NAME = 'pos_system'
 
+
+
+def last_order_id():
+    ret = 0
+    try:
+        query = "SELECT MAX(orderID) FROM Orders"
+        tmp1 = session.sql(query).execute()
+        tmp2 = tmp1.fetch_all()
+        ret = only_numerics(str(tmp2[0]))
+    except:
+        ret = 0
+    return ret + 1
+
 def only_numerics(string):
     tmpstr = ""
     for char in string:
@@ -47,26 +60,6 @@ def select_database(session):
         else:
             print("Error executing SQL command: {}".format(de))
             raise
-
-
-    ## RESET ORDERITEM
-    reset_table()
-
-
-def insert_into_table(session,table,OrderID):
-    insert_sql = [
-        "INSERT INTO "+table+" (orderID, item_id) VALUES ("+OrderID+",itemID""," +  str(test2) + ");"
-    ]
-
-    for query in insert_sql:
-        try:
-            print("SQL query {}: ".format(query), end='')
-            text_widget.insert(tk.END, "1x Pizza 150;-")
-            session.sql(query).execute()
-        except DatabaseError as err:
-            print(err.msg)
-        else:
-            print("OK")
 
 def retrieve_from_database(session):
     try:
@@ -88,20 +81,7 @@ def update_total_sum(amount):
     new_total = current_total + amount
     total_label["text"] = "Total: ${:.2f}".format(new_total)
 
-def reset_table():
-    insert_sql = [
-        "TRUNCATE TABLE OrderItem"
-    ]
-
-    for query in insert_sql:
-        try:
-            print("SQL query {}: ".format(query), end='')
-            text_widget.insert(tk.END, "------------ SELECTED ITEMS -----------\n\n")
-            session.sql(query).execute()
-        except DatabaseError as err:
-            print(err.msg)
-        else:
-            print("OK")
+# orderID, orderDate, itemID, name, subtotal
 
 def write_receipt_to_file(rows):
     receipt_info = ""  # Variable to store the receipt information
@@ -109,19 +89,15 @@ def write_receipt_to_file(rows):
     for row in rows:
         order_id = row[0]
         order_date = row[1]
-        total_quantity = row[5]
-        item_id = row[3]
+        item_name = row[3]
         item_price = row[4]
-        subtotal = row[6]
 
         receipt_info += f"Order ID: {order_id}\n"
         receipt_info += f"Order Date: {order_date}\n"
-        receipt_info += f"Total Quantity: {total_quantity}\n"
-        receipt_info += f"Item: {item_id}\n"
+        receipt_info += f"Item: {item_name}\n"
         receipt_info += f"Item Price: {item_price}\n"
-        receipt_info += f"Subtotal: {subtotal}\n\n"
 
-    total_price = sum(row[6] for row in rows)
+    total_price = sum(row[4] for row in rows)
     receipt_info += f"Total Price: {total_price}\n"
 
     global OrderID
@@ -129,6 +105,7 @@ def write_receipt_to_file(rows):
     filename = f"receipt_order_{temp}.txt"  # Include OrderID in the file name
 
     # Write receipt information to a text file
+    print(receipt_info)
     with open(filename, "w") as file:
         file.write(receipt_info)
 
@@ -144,8 +121,6 @@ def open_popup(rows):
         print("Popup closed")
         global OrderID
         OrderID += 1
-        print(OrderID)
-        reset_table()
         total_label["text"] = "Total: $0.00"
         write_receipt_to_file(rows)  # Write the receipt information to a text file
         messagebox.showinfo("Purchase Complete", "Purchase completed successfully")  # Display a message box
@@ -198,17 +173,17 @@ def button2_click():
 
 
 def button3_click():
-    #Insert Pizza into OrderItem
-    # OrderId should be a global variable
-    # itemID should be constant 1 s
-    # quanity should be removed
-    # subtotal should be constant 99'
     stockcheck = "SELECT stock FROM Item WHERE itemID = 1;"
     stockresult = session.sql(stockcheck).execute()
     rows = stockresult.fetch_all()
     if only_numerics(str(rows[0])) > 0:
+        get_price = "SELECT price FROM Item WHERE itemID = 1;"
+        tmp1 = session.sql(get_price).execute()
+        tmp2 = tmp1.fetch_all()
+        tmpprice = only_numerics(str(tmp2[0]))
+        print("Pizza OrderID: " + str(OrderID))
         insert_sql = [
-            "INSERT INTO OrderItem (orderID, itemID,quantity,subtotal) VALUES ("+str(OrderID)+",1,1,0);",
+            "INSERT INTO OrderItem (orderID, itemID, subtotal) VALUES (" + str(OrderID) + ",1," + str(tmpprice) + ");",
             "Update Item Set stock = stock - 1 WHERE itemID = 1;" 
         ]
         text_widget.insert(tk.END, "1x Pizza 99;-\n")
@@ -232,8 +207,12 @@ def button4_click():
     stockresult = session.sql(stockcheck).execute()
     rows = stockresult.fetch_all()
     if only_numerics(str(rows[0])) > 0:
+        get_price = "SELECT price FROM Item WHERE itemID = 2;"
+        tmp1 = session.sql(get_price).execute()
+        tmp2 = tmp1.fetch_all()
+        tmpprice = only_numerics(str(tmp2[0]))
         insert_sql = [
-            "INSERT INTO OrderItem (orderID, itemID,quantity,subtotal) VALUES ("+str(OrderID)+",2,1,0);",
+            "INSERT INTO OrderItem (orderID, itemID, subtotal) VALUES (" + str(OrderID) + ",2," + str(tmpprice) + ");",
             "Update Item Set stock = stock - 1 WHERE itemID = 2;" 
         ]
         text_widget.insert(tk.END, "1x Cola 19;-\n")
@@ -257,7 +236,7 @@ def button5_click():
     #print all items, prices, sum of prices, date and orderid
    
     try:
-        query = "SELECT o.orderID, o.orderDate, oi.itemID, i.name, i.price, oi.quantity, oi.subtotal " \
+        query = "SELECT o.orderID, o.orderDate, oi.itemID, i.name, oi.subtotal " \
                 "FROM Orders o " \
                 "JOIN OrderItem oi ON o.orderID = oi.orderID " \
                 "JOIN Item i ON oi.itemID = i.itemID " \
@@ -267,17 +246,19 @@ def button5_click():
         # Retrieve all rows of data
         rows = result.fetch_all()
 
+        print(str(rows[0]))
+
         # Open the popup and pass the retrieved data as a parameter
         open_popup(rows)
       
     except DatabaseError as err:
         print(f"Error: {err}")
 
-  
+# orderID, orderDate, itemID, name, subtotal
 
 def button6_click():
     try:
-        query = "SELECT SUM(totalPrice) FROM Orders WHERE orderDate = CURDATE();"
+        query = "SELECT SUM(OrderItem.subtotal) FROM Orders LEFT JOIN OrderItem ON Orders.orderID = OrderItem.orderID WHERE Orders.orderDate = CURDATE();"
         result = session.sql(query).execute()
         total_sales = result.fetch_one()[0] or 0
 
@@ -296,20 +277,23 @@ def button7_click():
         item_sales = result.fetch_all()
 
         # Display the item sales
-        messagebox.showinfo("Item Sales", "Item Sales:\n\n{}".format('\n'.join([f"Item ID: {row[0]}, Item Name: {row[1]}, Sold Count: {row[2]}" for row in item_sales])))
+        messagebox.showinfo("Item Sales", "Item Sales:\n\n{}".format('\n'.join([f"{row[1]}, sold count: {row[2]}" for row in item_sales])))
       
     except DatabaseError as err:
         print(f"Error: {err}")
 
 
+
 def main():
     select_database(session)
 
-    # Create the main window
-    
+    global OrderID
+    OrderID = last_order_id()
+    print("OrderID: " + str(OrderID))
 
+    query = "INSERT INTO Orders (orderID, orderDate) VALUES (" + str(OrderID) + ", CURDATE());"
+    session.sql(query).execute()
     
-
     # Create buttons
     button1 = Button(window, text="Show stock", font=("Verdana", 40), width=300, height=200, command=button1_click)
     button1.configure(background="red", fg="white")
@@ -338,6 +322,7 @@ def main():
     button7 = Button(window, text="View Item Sales", font=("Verdana", 20), width=300, height=100, command=button7_click)
     button7.configure(background="black", fg="white")
     button7.grid(row=3, column=1, padx=10, pady=10)
+    
     # Start the GUI event loop
     window.mainloop()
 

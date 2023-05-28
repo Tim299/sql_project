@@ -1,0 +1,9 @@
+Order ID: 4
+Order Date: 2023-05-28 00:00:00
+Item: Hawaii
+Item Price: 99
+Order ID: 4
+Order Date: 2023-05-28 00:00:00
+Item: Cola
+Item Price: 19
+Total Price: 118
