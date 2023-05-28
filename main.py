@@ -105,7 +105,6 @@ def write_receipt_to_file(rows):
     filename = f"receipt_order_{temp}.txt"  # Include OrderID in the file name
 
     # Write receipt information to a text file
-    print(receipt_info)
     with open(filename, "w") as file:
         file.write(receipt_info)
 
@@ -120,7 +119,9 @@ def open_popup(rows):
     def on_popup_close():
         print("Popup closed")
         global OrderID
-        OrderID += 1
+        OrderID = OrderID + 1
+        neworder = "INSERT INTO Orders (orderID, orderDate) VALUES (" + str(OrderID) + ", CURDATE());"
+        session.sql(neworder).execute()
         total_label["text"] = "Total: $0.00"
         write_receipt_to_file(rows)  # Write the receipt information to a text file
         messagebox.showinfo("Purchase Complete", "Purchase completed successfully")  # Display a message box
@@ -173,6 +174,7 @@ def button2_click():
 
 
 def button3_click():
+    global OrderID
     stockcheck = "SELECT stock FROM Item WHERE itemID = 1;"
     stockresult = session.sql(stockcheck).execute()
     rows = stockresult.fetch_all()
@@ -181,21 +183,17 @@ def button3_click():
         tmp1 = session.sql(get_price).execute()
         tmp2 = tmp1.fetch_all()
         tmpprice = only_numerics(str(tmp2[0]))
-        print("Pizza OrderID: " + str(OrderID))
-        insert_sql = [
-            "INSERT INTO OrderItem (orderID, itemID, subtotal) VALUES (" + str(OrderID) + ",1," + str(tmpprice) + ");",
-            "Update Item Set stock = stock - 1 WHERE itemID = 1;" 
-        ]
-        text_widget.insert(tk.END, "1x Pizza 99;-\n")
-        for query in insert_sql:
-            try:
-                print("SQL query {}: ".format(query), end='')
-                session.sql(query).execute()
-            except DatabaseError as err:
-                print(err.msg)
-            else:
-                print("OK")
-        update_total_sum(99.00)
+        print("OrderID in pizza: " + str(OrderID))
+        query = "CALL AddToCart(1, " + str(tmpprice) + ", " + str(OrderID) + ");"
+        text_widget.insert(tk.END, "1x Pizza $99\n")
+        try:
+            print("SQL query {}: ".format(query), end='')
+            session.sql(query).execute()
+        except DatabaseError as err:
+            print(err.msg)
+        else:
+            print("OK")
+        update_total_sum(99)
     else:
         print("OUT OF STOCK")
         text_widget.insert(tk.END, "OUT OF STOCK\n")
@@ -211,21 +209,17 @@ def button4_click():
         tmp1 = session.sql(get_price).execute()
         tmp2 = tmp1.fetch_all()
         tmpprice = only_numerics(str(tmp2[0]))
-        insert_sql = [
-            "INSERT INTO OrderItem (orderID, itemID, subtotal) VALUES (" + str(OrderID) + ",2," + str(tmpprice) + ");",
-            "Update Item Set stock = stock - 1 WHERE itemID = 2;" 
-        ]
-        text_widget.insert(tk.END, "1x Cola 19;-\n")
-        for query in insert_sql:
-            try:
-                print("SQL query {}: ".format(query), end='')
-
-                session.sql(query).execute()
-            except DatabaseError as err:
-                print(err.msg)
-            else:
-                print("OK")
-        update_total_sum(19.00)
+        print("OrderID in cola: " + str(OrderID))
+        query = "CALL AddToCart(2, " + str(tmpprice) + ", " + str(OrderID) + ");"
+        text_widget.insert(tk.END, "1x Cola $19\n")
+        try:
+            print("SQL query {}: ".format(query), end='')
+            session.sql(query).execute()
+        except DatabaseError as err:
+            print(err.msg)
+        else:
+            print("OK")
+        update_total_sum(19)
     else:
         print("OUT OF STOCK")
         text_widget.insert(tk.END, "OUT OF STOCK\n")
@@ -283,13 +277,12 @@ def button7_click():
         print(f"Error: {err}")
 
 
-
 def main():
     select_database(session)
 
     global OrderID
     OrderID = last_order_id()
-    print("OrderID: " + str(OrderID))
+    print("OrderID at launch: " + str(OrderID))
 
     query = "INSERT INTO Orders (orderID, orderDate) VALUES (" + str(OrderID) + ", CURDATE());"
     session.sql(query).execute()
@@ -322,7 +315,6 @@ def main():
     button7 = Button(window, text="View Item Sales", font=("Verdana", 20), width=300, height=100, command=button7_click)
     button7.configure(background="black", fg="white")
     button7.grid(row=3, column=1, padx=10, pady=10)
-    
     # Start the GUI event loop
     window.mainloop()
 
