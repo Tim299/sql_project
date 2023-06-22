@@ -50,8 +50,8 @@ BEGIN
     FROM Item
     WHERE itemID = NEW.itemID AND itemType = 'pizza';
 
-    -- Check if the current day is Friday (day of the week: 5)
-    SELECT IF(DAYOFWEEK(CURRENT_DATE()) = 5, 1, 0) INTO is_friday;
+    -- Check if the current day is Friday (day of the week: 6)
+    SELECT IF(DAYOFWEEK(CURRENT_DATE()) = 6, 1, 0) INTO is_friday;
 
     -- Decrease the price temporarily by 20% if it's a pizza on Friday
     IF is_pizza = 1 AND is_friday = 1 THEN
