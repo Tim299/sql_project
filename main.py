@@ -252,7 +252,7 @@ def button5_click():
 
 def button6_click():
     try:
-        query = "SELECT SUM(OrderItem.subtotal) FROM Orders LEFT JOIN OrderItem ON Orders.orderID = OrderItem.orderID WHERE Orders.orderDate = CURDATE();"
+        query = "SELECT SUM(OrderItem.subtotal) FROM Orders INNER JOIN OrderItem ON Orders.orderID = OrderItem.orderID WHERE Orders.orderDate = CURDATE();"
         result = session.sql(query).execute()
         total_sales = result.fetch_one()[0] or 0
 
@@ -264,7 +264,7 @@ def button6_click():
 def button7_click():
     try:
         # SQL query to join Orders and Items tables and count the number of times each item appears in Orders
-        query = "SELECT i.itemID, i.name, COUNT(*) AS sold_count FROM Orders o JOIN OrderItem oi ON o.orderID = oi.orderID JOIN Item i ON oi.itemID = i.itemID GROUP BY oi.itemID, i.itemID, i.name;"
+        query = "SELECT i.itemID, i.name, COUNT(*) AS sold_count FROM Orders o JOIN OrderItem oi ON o.orderID = oi.orderID JOIN Item i ON oi.itemID = i.itemID GROUP BY oi.itemID, i.name;"
         result = session.sql(query).execute()
 
         # Retrieve the item sales data
